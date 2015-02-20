@@ -6,6 +6,7 @@ import argparse
 import collections
 import io
 import os.path
+import re
 import subprocess
 import sys
 
@@ -34,6 +35,25 @@ def _check_keys(d, keys):
 def indent(text):
     lines = text.splitlines()
     return '\n'.join('    ' + line for line in lines) + '\n'
+
+
+NUM = r'(\d*(?:\.\d*)?)'
+RGBA_RE = re.compile(r'rgba\({0},\s*{0},\s*{0},\s*{0}\)'.format(NUM))
+
+
+class Property(collections.namedtuple('Property', ('name', 'value'))):
+    __slots__ = ()
+
+    @classmethod
+    def from_dict(cls, dct):
+        assert dct['type'] == 'declaration', dct['type']
+        _check_keys(dct, ('property', 'value'))
+        value = dct['value']
+        value = RGBA_RE.sub(r'rgba(\1, \2, \3, \4)', value)
+        return cls(dct['property'], value)
+
+    def to_text(self, **_):
+        return '    {0}: {1};\n'.format(self.name, self.value)
 
 
 class Charset(collections.namedtuple('Charset', ('charset',))):
@@ -136,19 +156,6 @@ class Rule(collections.namedtuple('Rule', ('selectors', 'properties'))):
                 property.to_text(**kwargs) for property in self.properties
             ),
         )
-
-
-class Property(collections.namedtuple('Property', ('name', 'value'))):
-    __slots__ = ()
-
-    @classmethod
-    def from_dict(cls, dct):
-        assert dct['type'] == 'declaration', dct['type']
-        _check_keys(dct, ('property', 'value'))
-        return cls(dct['property'], dct['value'])
-
-    def to_text(self, **_):
-        return '    {0}: {1};\n'.format(self.name, self.value)
 
 
 def require_nodeenv():

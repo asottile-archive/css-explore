@@ -88,6 +88,15 @@ def test_ignore_charset():
     assert ret == ''
 
 
+def test_normalize_color():
+    ret = main.format_css('a{color: rgba(255,255,255,0.7);}')
+    assert ret == (
+        'a {\n'
+        '    color: rgba(255, 255, 255, 0.7);\n'
+        '}\n'
+    )
+
+
 @pytest.mark.usefixtures('in_tmpdir')
 def test_require_nodeenv_not_there(check_call_mock):
     def make_if_not_exists(*_, **__):
