@@ -39,13 +39,15 @@ def indent(text):
     return '\n'.join('    ' + line for line in lines) + '\n'
 
 
+COMMA_RE = re.compile(r'(,\s*)')
+COMMA_RE_SUB = ', '
+FLOAT_RE = re.compile(r'(?<!\d)(\.\d+)')
+FLOAT_RE_SUB = r'0\1'
+RELATION_RE = re.compile(r'\s*([+>])\s*')
+RELATION_RE_SUB = r' \1 '
 NUM = r'(\d*(?:\.\d*)?)'
 RGBA_RE = re.compile(r'rgba\({0},\s*{0},\s*{0},\s*{0}\)'.format(NUM))
 RGBA_RE_SUB = r'rgba(\1, \2, \3, \4)'
-COMMA_RE = re.compile(r'(,\s*)')
-COMMA_RE_SUB = ', '
-RELATION_RE = re.compile(r'\s*([+>])\s*')
-RELATION_RE_SUB = r' \1 '
 SLASH_RE = re.compile(r'\s*/\s*')
 SLASH_RE_SUB = ' / '
 
@@ -73,8 +75,9 @@ class Property(collections.namedtuple('Property', ('name', 'value'))):
         assert dct['type'] == 'declaration', dct['type']
         _check_keys(dct, ('property', 'value'))
         value = dct['value']
-        value = RGBA_RE.sub(RGBA_RE_SUB, value)
         value = COMMA_RE.sub(COMMA_RE_SUB, value)
+        value = FLOAT_RE.sub(FLOAT_RE_SUB, value)
+        value = RGBA_RE.sub(RGBA_RE_SUB, value)
         value = SLASH_RE.sub(SLASH_RE_SUB, value)
         value = norm_unicode_escapes(value)
         return cls(dct['property'], value)

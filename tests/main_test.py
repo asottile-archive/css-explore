@@ -159,6 +159,15 @@ def test_normalize_font_shorthand():
     )
 
 
+def test_normalize_less_than_one_float():
+    ret = main.format_css('a {opacity: .35}')
+    assert ret == (
+        'a {\n'
+        '    opacity: 0.35;\n'
+        '}\n'
+    )
+
+
 @pytest.mark.usefixtures('in_tmpdir')
 def test_require_nodeenv_not_there(check_call_mock):
     def make_if_not_exists(*_, **__):
