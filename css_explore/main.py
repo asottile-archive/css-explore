@@ -40,6 +40,7 @@ def indent(text):
 NUM = r'(\d*(?:\.\d*)?)'
 RGBA_RE = re.compile(r'rgba\({0},\s*{0},\s*{0},\s*{0}\)'.format(NUM))
 COMMA_RE = re.compile(r'(,\s*)')
+RELATION_RE = re.compile(r'\s*([+>]\s*)')
 
 
 class Property(collections.namedtuple('Property', ('name', 'value'))):
@@ -142,6 +143,7 @@ class Rule(collections.namedtuple('Rule', ('selectors', 'properties'))):
     def from_dict(cls, dct):
         _check_keys(dct, ('selectors', 'declarations'))
         selectors = ', '.join(dct['selectors'])
+        selectors = RELATION_RE.sub(r' \1 ', selectors)
         properties = tuple(
             Property.from_dict(property_dict)
             for property_dict in dct['declarations']
