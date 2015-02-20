@@ -39,8 +39,11 @@ def indent(text):
 
 NUM = r'(\d*(?:\.\d*)?)'
 RGBA_RE = re.compile(r'rgba\({0},\s*{0},\s*{0},\s*{0}\)'.format(NUM))
+RGBA_RE_SUB = r'rgba(\1, \2, \3, \4)'
 COMMA_RE = re.compile(r'(,\s*)')
+COMMA_RE_SUB = ', '
 RELATION_RE = re.compile(r'\s*([+>])\s*')
+RELATION_RE_SUB = r' \1 '
 
 
 class Property(collections.namedtuple('Property', ('name', 'value'))):
@@ -51,8 +54,8 @@ class Property(collections.namedtuple('Property', ('name', 'value'))):
         assert dct['type'] == 'declaration', dct['type']
         _check_keys(dct, ('property', 'value'))
         value = dct['value']
-        value = RGBA_RE.sub(r'rgba(\1, \2, \3, \4)', value)
-        value = COMMA_RE.sub(', ', value)
+        value = RGBA_RE.sub(RGBA_RE_SUB, value)
+        value = COMMA_RE.sub(COMMA_RE_SUB, value)
         return cls(dct['property'], value)
 
     def to_text(self, **_):
@@ -126,8 +129,10 @@ class MediaQuery(collections.namedtuple('MediaQuery', ('media', 'rules'))):
     @classmethod
     def from_dict(cls, dct):
         _check_keys(dct, ('media', 'rules'))
+        media = dct['media']
+        media = COMMA_RE.sub(COMMA_RE_SUB, media)
         rules = tuple(generic_to_node(node_dict) for node_dict in dct['rules'])
-        return cls(dct['media'], rules)
+        return cls(media, rules)
 
     def to_text(self, **kwargs):
         return '@media {0} {{\n{1}}}\n'.format(
@@ -143,7 +148,7 @@ class Rule(collections.namedtuple('Rule', ('selectors', 'properties'))):
     def from_dict(cls, dct):
         _check_keys(dct, ('selectors', 'declarations'))
         selectors = ', '.join(dct['selectors'])
-        selectors = RELATION_RE.sub(r' \1 ', selectors)
+        selectors = RELATION_RE.sub(RELATION_RE_SUB, selectors)
         properties = tuple(
             Property.from_dict(property_dict)
             for property_dict in dct['declarations']

@@ -126,6 +126,21 @@ def test_normalize_child_selector_more():
     )
 
 
+def test_normalize_comma_media_query():
+    ret = main.format_css(
+        '@media (min-device-pixel-ratio: 2),(min-resolution: 192dpi) {'
+        '    a { color: red; }'
+        '}'
+    )
+    assert ret == (
+        '@media (min-device-pixel-ratio: 2), (min-resolution: 192dpi) {\n'
+        '    a {\n'
+        '        color: red;\n'
+        '    }\n'
+        '}\n'
+    )
+
+
 @pytest.mark.usefixtures('in_tmpdir')
 def test_require_nodeenv_not_there(check_call_mock):
     def make_if_not_exists(*_, **__):
