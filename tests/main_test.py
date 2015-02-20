@@ -168,6 +168,15 @@ def test_normalize_less_than_one_float():
     )
 
 
+def test_normalize_selector_order():
+    ret = main.format_css('b, a, c { color: red; }')
+    assert ret == (
+        'a, b, c {\n'
+        '    color: red;\n'
+        '}\n'
+    )
+
+
 @pytest.mark.usefixtures('in_tmpdir')
 def test_require_nodeenv_not_there(check_call_mock):
     def make_if_not_exists(*_, **__):
