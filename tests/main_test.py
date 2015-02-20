@@ -82,14 +82,14 @@ def test_require_nodeenv_not_there(check_call_mock):
     check_call_mock.side_effect = make_if_not_exists
     main.require_nodeenv()
     assert check_call_mock.call_count == 2
-    assert os.path.exists('.nenv-css-explore/installed')
+    assert os.path.exists('{0}/installed'.format(main.NENV_PATH))
 
 
 @pytest.mark.usefixtures('in_tmpdir')
 def test_require_nodeenv_already_there(check_call_mock):
     # Make it look like we've already installed
-    os.mkdir('.nenv-css-explore')
-    open('.nenv-css-explore/installed', 'w').close()
+    os.mkdir(main.NENV_PATH)
+    open('{0}/installed'.format(main.NENV_PATH), 'w').close()
 
     # If an installation is attempted, it'll raise
     check_call_mock.side_effect = AssertionError

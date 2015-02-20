@@ -90,13 +90,13 @@ def require_nodeenv():
         stderr=open(os.devnull, 'w'),
     )
     subprocess.check_call(
-        ('.nenv-css-explore/bin/npm', 'install', '-g', 'css'),
+        ('{0}/bin/npm'.format(NENV_PATH), 'install', '-g', 'css'),
         stdout=open(os.devnull, 'w'),
         stderr=open(os.devnull, 'w'),
     )
 
     # Atomically indicate we've installed
-    io.open('.nenv-css-explore/installed', 'w').close()
+    io.open('{0}/installed'.format(NENV_PATH), 'w').close()
 
 
 def to_property(declaration_dict):
@@ -159,10 +159,13 @@ def format_css(contents):
 
     proc = subprocess.Popen(
         (
-            '.nenv-css-explore/bin/node',
-            pkg_resources.resource_filename(  # pylint:disable=no-member
-                'css_explore', 'resources/css_to_json.js',
-            ),
+            'sh', '-c',
+            ". {0}/bin/activate && node '{1}'".format(
+                NENV_PATH,
+                pkg_resources.resource_filename(  # pylint:disable=no-member
+                    'css_explore', 'resources/css_to_json.js',
+                ),
+            )
         ),
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
