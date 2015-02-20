@@ -99,12 +99,20 @@ def require_nodeenv():
     io.open('{0}/installed'.format(NENV_PATH), 'w').close()
 
 
+def _check_keys(d, keys):
+    # All things have these keys
+    keys = keys + ('position', 'type')
+    assert set(d) <= set(keys), (set(d), set(keys))
+
+
 def to_property(declaration_dict):
     assert declaration_dict['type'] == 'declaration', declaration_dict['type']
+    _check_keys(declaration_dict, ('property', 'value'))
     return Property(declaration_dict['property'], declaration_dict['value'])
 
 
 def to_keyframe(keyframe_dict):
+    _check_keys(keyframe_dict, ('declarations', 'values'))
     properties = tuple(
         to_property(declaration_dict)
         for declaration_dict in keyframe_dict['declarations']
@@ -116,6 +124,7 @@ def to_keyframe(keyframe_dict):
 
 
 def to_keyframes(keyframes_dict):
+    _check_keys(keyframes_dict, ('vendor', 'name', 'keyframes'))
     keyframes = tuple(
         to_keyframe(keyframe_dict)
         for keyframe_dict in keyframes_dict['keyframes']
@@ -128,6 +137,7 @@ def to_keyframes(keyframes_dict):
 
 
 def to_media_query(media_query_dict):
+    _check_keys(media_query_dict, ('media', 'rules'))
     rules = tuple(
         generic_to_node(node_dict) for node_dict in media_query_dict['rules']
     )
@@ -135,6 +145,7 @@ def to_media_query(media_query_dict):
 
 
 def to_rule(rule_dict):
+    _check_keys(rule_dict, ('selectors', 'declarations'))
     selectors = ', '.join(rule_dict['selectors'])
     properties = tuple(
         to_property(declaration_dict)
