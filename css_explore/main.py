@@ -40,7 +40,7 @@ def indent(text):
 NUM = r'(\d*(?:\.\d*)?)'
 RGBA_RE = re.compile(r'rgba\({0},\s*{0},\s*{0},\s*{0}\)'.format(NUM))
 COMMA_RE = re.compile(r'(,\s*)')
-RELATION_RE = re.compile(r'\s*([+>]\s*)')
+RELATION_RE = re.compile(r'\s*([+>])\s*')
 
 
 class Property(collections.namedtuple('Property', ('name', 'value'))):

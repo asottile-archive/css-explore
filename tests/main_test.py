@@ -117,6 +117,15 @@ def test_normalize_child_selector():
     )
 
 
+def test_normalize_child_selector_more():
+    ret = main.format_css('a > b { color: red; }')
+    assert ret == (
+        'a > b {\n'
+        '    color: red;\n'
+        '}\n'
+    )
+
+
 @pytest.mark.usefixtures('in_tmpdir')
 def test_require_nodeenv_not_there(check_call_mock):
     def make_if_not_exists(*_, **__):
