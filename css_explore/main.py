@@ -7,11 +7,13 @@ import collections
 import io
 import os.path
 import re
+import string
 import subprocess
 import sys
 
 import pkg_resources
 import simplejson
+import six
 
 
 NENV_PATH = '.nenv-css-explore'
@@ -46,6 +48,21 @@ RELATION_RE = re.compile(r'\s*([+>])\s*')
 RELATION_RE_SUB = r' \1 '
 
 
+def norm_unicode_escapes(value):
+    if (
+            len(value) != len(r'"\0000"') or
+            value[0] != value[-1] or
+            value[0] not in ('"', "'") or
+            value[1] != '\\' or
+            not set(value[2:-1]) < set(string.hexdigits)
+    ):
+        return value
+
+    quote_type = value[0]
+    unescaped = six.unichr(int(value[2:-1], 16))
+    return quote_type + unescaped + quote_type
+
+
 class Property(collections.namedtuple('Property', ('name', 'value'))):
     __slots__ = ()
 
@@ -56,6 +73,7 @@ class Property(collections.namedtuple('Property', ('name', 'value'))):
         value = dct['value']
         value = RGBA_RE.sub(RGBA_RE_SUB, value)
         value = COMMA_RE.sub(COMMA_RE_SUB, value)
+        value = norm_unicode_escapes(value)
         return cls(dct['property'], value)
 
     def to_text(self, **_):

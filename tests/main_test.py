@@ -141,6 +141,15 @@ def test_normalize_comma_media_query():
     )
 
 
+def test_normalize_unicode_escapes():
+    ret = main.format_css(r'a{content: "\25AA"}')
+    assert ret == (
+        'a {\n'
+        '    content: "▪";\n'
+        '}\n'
+    )
+
+
 @pytest.mark.usefixtures('in_tmpdir')
 def test_require_nodeenv_not_there(check_call_mock):
     def make_if_not_exists(*_, **__):

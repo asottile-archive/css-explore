@@ -29,6 +29,7 @@ setup(
         'argparse',
         'nodeenv',
         'simplejson',
+        'six',
     ],
     entry_points={
         'console_scripts': [
