@@ -46,6 +46,8 @@ COMMA_RE = re.compile(r'(,\s*)')
 COMMA_RE_SUB = ', '
 RELATION_RE = re.compile(r'\s*([+>])\s*')
 RELATION_RE_SUB = r' \1 '
+SLASH_RE = re.compile(r'\s*/\s*')
+SLASH_RE_SUB = ' / '
 
 
 def norm_unicode_escapes(value):
@@ -73,6 +75,7 @@ class Property(collections.namedtuple('Property', ('name', 'value'))):
         value = dct['value']
         value = RGBA_RE.sub(RGBA_RE_SUB, value)
         value = COMMA_RE.sub(COMMA_RE_SUB, value)
+        value = SLASH_RE.sub(SLASH_RE_SUB, value)
         value = norm_unicode_escapes(value)
         return cls(dct['property'], value)
 

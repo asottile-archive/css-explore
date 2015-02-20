@@ -150,6 +150,15 @@ def test_normalize_unicode_escapes():
     )
 
 
+def test_normalize_font_shorthand():
+    ret = main.format_css('a {font: 12px/1.2 Arial}')
+    assert ret == (
+        'a {\n'
+        '    font: 12px / 1.2 Arial;\n'
+        '}\n'
+    )
+
+
 @pytest.mark.usefixtures('in_tmpdir')
 def test_require_nodeenv_not_there(check_call_mock):
     def make_if_not_exists(*_, **__):
