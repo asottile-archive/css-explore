@@ -11,6 +11,11 @@ The reason I made this project was to compare compilation outputs of various
 implementations of scss in an effort to switch a codebase from one compiler
 to another.
 
+This uses:
+- [reworkcss/css](https://github.com/reworkcss/css) for parsing
+- [ekalinin/nodeenv](https://github.com/ekalinin/nodeenv) for bootstrapping node
+
+
 ## Usage
 
 ```
