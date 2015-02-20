@@ -78,6 +78,16 @@ def test_ignore_empty_rules():
     assert ret == ''
 
 
+def test_charset():
+    ret = main.format_css('@charset "utf-8";')
+    assert ret == '@charset "utf-8";\n'
+
+
+def test_ignore_charset():
+    ret = main.format_css('@charset "utf-8";', ignore_charset=True)
+    assert ret == ''
+
+
 @pytest.mark.usefixtures('in_tmpdir')
 def test_require_nodeenv_not_there(check_call_mock):
     def make_if_not_exists(*_, **__):

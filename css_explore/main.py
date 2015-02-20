@@ -30,6 +30,17 @@ def indent(text):
     return '\n'.join('    ' + line for line in lines) + '\n'
 
 
+class Charset(collections.namedtuple('Charset', ('charset',))):
+    __slots__ = ()
+
+    def to_text(self, **kwargs):
+        ignore_charset = kwargs['ignore_charset']
+        if ignore_charset:
+            return ''
+        else:
+            return '@charset {0};\n'.format(self.charset)
+
+
 class KeyFrame(collections.namedtuple('KeyFrame', ('values', 'properties'))):
     __slots__ = ()
 
@@ -121,6 +132,11 @@ def to_property(declaration_dict):
     return Property(declaration_dict['property'], declaration_dict['value'])
 
 
+def to_charset(charset_dict):
+    _check_keys(charset_dict, ('charset',))
+    return Charset(charset_dict['charset'])
+
+
 def to_keyframe(keyframe_dict):
     _check_keys(keyframe_dict, ('declarations', 'values'))
     properties = tuple(
@@ -165,6 +181,7 @@ def to_rule(rule_dict):
 
 
 TO_NODE_TYPES = {
+    'charset': to_charset,
     'keyframes': to_keyframes,
     'media': to_media_query,
     'rule': to_rule,
@@ -176,6 +193,7 @@ def generic_to_node(node_dict):
 
 
 def format_css(contents, **kwargs):
+    ignore_charset = kwargs.pop('ignore_charset', False)
     ignore_empty_rules = kwargs.pop('ignore_empty_rules', False)
     assert not kwargs, kwargs
     require_nodeenv()
@@ -202,7 +220,11 @@ def format_css(contents, **kwargs):
     sheet = simplejson.loads(out)['stylesheet']
     rules = tuple(generic_to_node(rule_dict) for rule_dict in sheet['rules'])
     return ''.join(
-        rule.to_text(ignore_empty_rules=ignore_empty_rules) for rule in rules
+        rule.to_text(
+            ignore_charset=ignore_charset,
+            ignore_empty_rules=ignore_empty_rules,
+        )
+        for rule in rules
     )
 
 
