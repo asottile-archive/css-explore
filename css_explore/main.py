@@ -25,6 +25,12 @@ class CalledProcessError(ValueError):
         )
 
 
+def _check_keys(d, keys):
+    # All things have these keys
+    keys = keys + ('position', 'type')
+    assert set(d) <= set(keys), (set(d), set(keys))
+
+
 def indent(text):
     lines = text.splitlines()
     return '\n'.join('    ' + line for line in lines) + '\n'
@@ -32,6 +38,11 @@ def indent(text):
 
 class Charset(collections.namedtuple('Charset', ('charset',))):
     __slots__ = ()
+
+    @classmethod
+    def from_dict(cls, dct):
+        _check_keys(dct, ('charset',))
+        return cls(dct['charset'])
 
     def to_text(self, **kwargs):
         ignore_charset = kwargs['ignore_charset']
@@ -43,6 +54,15 @@ class Charset(collections.namedtuple('Charset', ('charset',))):
 
 class KeyFrame(collections.namedtuple('KeyFrame', ('values', 'properties'))):
     __slots__ = ()
+
+    @classmethod
+    def from_dict(cls, dct):
+        _check_keys(dct, ('declarations', 'values'))
+        properties = tuple(
+            Property.from_dict(property_dict)
+            for property_dict in dct['declarations']
+        )
+        return cls(', '.join(dct['values']), properties)
 
     def to_text(self, **kwargs):
         return '{0} {{\n{1}}}\n'.format(
@@ -58,6 +78,15 @@ class KeyFrames(
 ):
     __slots__ = ()
 
+    @classmethod
+    def from_dict(cls, dct):
+        _check_keys(dct, ('vendor', 'name', 'keyframes'))
+        keyframes = tuple(
+            KeyFrame.from_dict(keyframe_dict)
+            for keyframe_dict in dct['keyframes']
+        )
+        return cls(dct.get('vendor', ''), dct['name'], keyframes)
+
     def to_text(self, **kwargs):
         return '@{0}keyframes {1} {{\n{2}}}\n'.format(
             self.vendor,
@@ -71,6 +100,12 @@ class KeyFrames(
 class MediaQuery(collections.namedtuple('MediaQuery', ('media', 'rules'))):
     __slots__ = ()
 
+    @classmethod
+    def from_dict(cls, dct):
+        _check_keys(dct, ('media', 'rules'))
+        rules = tuple(generic_to_node(node_dict) for node_dict in dct['rules'])
+        return cls(dct['media'], rules)
+
     def to_text(self, **kwargs):
         return '@media {0} {{\n{1}}}\n'.format(
             self.media,
@@ -80,6 +115,16 @@ class MediaQuery(collections.namedtuple('MediaQuery', ('media', 'rules'))):
 
 class Rule(collections.namedtuple('Rule', ('selectors', 'properties'))):
     __slots__ = ()
+
+    @classmethod
+    def from_dict(cls, dct):
+        _check_keys(dct, ('selectors', 'declarations'))
+        selectors = ', '.join(dct['selectors'])
+        properties = tuple(
+            Property.from_dict(property_dict)
+            for property_dict in dct['declarations']
+        )
+        return cls(selectors, properties)
 
     def to_text(self, **kwargs):
         ignore_empty_rules = kwargs['ignore_empty_rules']
@@ -95,6 +140,12 @@ class Rule(collections.namedtuple('Rule', ('selectors', 'properties'))):
 
 class Property(collections.namedtuple('Property', ('name', 'value'))):
     __slots__ = ()
+
+    @classmethod
+    def from_dict(cls, dct):
+        assert dct['type'] == 'declaration', dct['type']
+        _check_keys(dct, ('property', 'value'))
+        return cls(dct['property'], dct['value'])
 
     def to_text(self, **_):
         return '    {0}: {1};\n'.format(self.name, self.value)
@@ -120,76 +171,16 @@ def require_nodeenv():
     io.open('{0}/installed'.format(NENV_PATH), 'w').close()
 
 
-def _check_keys(d, keys):
-    # All things have these keys
-    keys = keys + ('position', 'type')
-    assert set(d) <= set(keys), (set(d), set(keys))
-
-
-def to_property(declaration_dict):
-    assert declaration_dict['type'] == 'declaration', declaration_dict['type']
-    _check_keys(declaration_dict, ('property', 'value'))
-    return Property(declaration_dict['property'], declaration_dict['value'])
-
-
-def to_charset(charset_dict):
-    _check_keys(charset_dict, ('charset',))
-    return Charset(charset_dict['charset'])
-
-
-def to_keyframe(keyframe_dict):
-    _check_keys(keyframe_dict, ('declarations', 'values'))
-    properties = tuple(
-        to_property(declaration_dict)
-        for declaration_dict in keyframe_dict['declarations']
-    )
-    return KeyFrame(
-        ', '.join(keyframe_dict['values']),
-        properties,
-    )
-
-
-def to_keyframes(keyframes_dict):
-    _check_keys(keyframes_dict, ('vendor', 'name', 'keyframes'))
-    keyframes = tuple(
-        to_keyframe(keyframe_dict)
-        for keyframe_dict in keyframes_dict['keyframes']
-    )
-    return KeyFrames(
-        keyframes_dict.get('vendor', ''),
-        keyframes_dict['name'],
-        keyframes,
-    )
-
-
-def to_media_query(media_query_dict):
-    _check_keys(media_query_dict, ('media', 'rules'))
-    rules = tuple(
-        generic_to_node(node_dict) for node_dict in media_query_dict['rules']
-    )
-    return MediaQuery(media_query_dict['media'], rules)
-
-
-def to_rule(rule_dict):
-    _check_keys(rule_dict, ('selectors', 'declarations'))
-    selectors = ', '.join(rule_dict['selectors'])
-    properties = tuple(
-        to_property(declaration_dict)
-        for declaration_dict in rule_dict['declarations']
-    )
-    return Rule(selectors, properties)
-
-
 TO_NODE_TYPES = {
-    'charset': to_charset,
-    'keyframes': to_keyframes,
-    'media': to_media_query,
-    'rule': to_rule,
+    'charset': Charset,
+    'keyframes': KeyFrames,
+    'media': MediaQuery,
+    'rule': Rule,
 }
 
 
 def generic_to_node(node_dict):
-    return TO_NODE_TYPES[node_dict['type']](node_dict)
+    return TO_NODE_TYPES[node_dict['type']].from_dict(node_dict)
 
 
 def format_css(contents, **kwargs):
