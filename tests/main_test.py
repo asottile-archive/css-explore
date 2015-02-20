@@ -97,6 +97,17 @@ def test_normalize_color():
     )
 
 
+def test_normalize_comma():
+    ret = main.format_css(
+        'a{box-shadow: 0 1px 1px white,inset 0 4px 4px black;}'
+    )
+    assert ret == (
+        'a {\n'
+        '    box-shadow: 0 1px 1px white, inset 0 4px 4px black;\n'
+        '}\n'
+    )
+
+
 @pytest.mark.usefixtures('in_tmpdir')
 def test_require_nodeenv_not_there(check_call_mock):
     def make_if_not_exists(*_, **__):

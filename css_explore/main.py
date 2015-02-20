@@ -39,6 +39,7 @@ def indent(text):
 
 NUM = r'(\d*(?:\.\d*)?)'
 RGBA_RE = re.compile(r'rgba\({0},\s*{0},\s*{0},\s*{0}\)'.format(NUM))
+COMMA_RE = re.compile(r'(,\s*)')
 
 
 class Property(collections.namedtuple('Property', ('name', 'value'))):
@@ -50,6 +51,7 @@ class Property(collections.namedtuple('Property', ('name', 'value'))):
         _check_keys(dct, ('property', 'value'))
         value = dct['value']
         value = RGBA_RE.sub(r'rgba(\1, \2, \3, \4)', value)
+        value = COMMA_RE.sub(', ', value)
         return cls(dct['property'], value)
 
     def to_text(self, **_):
