@@ -33,10 +33,12 @@ def indent(text):
 class KeyFrame(collections.namedtuple('KeyFrame', ('values', 'properties'))):
     __slots__ = ()
 
-    def to_text(self):
+    def to_text(self, **kwargs):
         return '{0} {{\n{1}}}\n'.format(
             self.values,
-            ''.join(property.to_text() for property in self.properties),
+            ''.join(
+                property.to_text(**kwargs) for property in self.properties
+            ),
         )
 
 
@@ -45,37 +47,45 @@ class KeyFrames(
 ):
     __slots__ = ()
 
-    def to_text(self):
+    def to_text(self, **kwargs):
         return '@{0}keyframes {1} {{\n{2}}}\n'.format(
             self.vendor,
             self.name,
-            indent(''.join(keyframe.to_text() for keyframe in self.keyframes)),
+            indent(''.join(
+                keyframe.to_text(**kwargs) for keyframe in self.keyframes
+            )),
         )
 
 
 class MediaQuery(collections.namedtuple('MediaQuery', ('media', 'rules'))):
     __slots__ = ()
 
-    def to_text(self):
+    def to_text(self, **kwargs):
         return '@media {0} {{\n{1}}}\n'.format(
-            self.media, indent(''.join(rule.to_text() for rule in self.rules)),
+            self.media,
+            indent(''.join(rule.to_text(**kwargs) for rule in self.rules)),
         )
 
 
 class Rule(collections.namedtuple('Rule', ('selectors', 'properties'))):
     __slots__ = ()
 
-    def to_text(self):
+    def to_text(self, **kwargs):
+        ignore_empty_rules = kwargs['ignore_empty_rules']
+        if ignore_empty_rules and not self.properties:
+            return ''
         return '{0} {{\n{1}}}\n'.format(
             self.selectors,
-            ''.join(property.to_text() for property in self.properties),
+            ''.join(
+                property.to_text(**kwargs) for property in self.properties
+            ),
         )
 
 
 class Property(collections.namedtuple('Property', ('name', 'value'))):
     __slots__ = ()
 
-    def to_text(self):
+    def to_text(self, **_):
         return '    {0}: {1};\n'.format(self.name, self.value)
 
 
@@ -165,7 +175,9 @@ def generic_to_node(node_dict):
     return TO_NODE_TYPES[node_dict['type']](node_dict)
 
 
-def format_css(contents):
+def format_css(contents, **kwargs):
+    ignore_empty_rules = kwargs.pop('ignore_empty_rules', False)
+    assert not kwargs, kwargs
     require_nodeenv()
 
     proc = subprocess.Popen(
@@ -189,7 +201,9 @@ def format_css(contents):
 
     sheet = simplejson.loads(out)['stylesheet']
     rules = tuple(generic_to_node(rule_dict) for rule_dict in sheet['rules'])
-    return ''.join(rule.to_text() for rule in rules)
+    return ''.join(
+        rule.to_text(ignore_empty_rules=ignore_empty_rules) for rule in rules
+    )
 
 
 def main(argv=None):
