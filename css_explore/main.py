@@ -78,7 +78,9 @@ class Property(collections.namedtuple('Property', ('name', 'value'))):
         value = COMMA_RE.sub(COMMA_RE_SUB, value)
         value = FLOAT_RE.sub(FLOAT_RE_SUB, value)
         value = RGBA_RE.sub(RGBA_RE_SUB, value)
-        value = SLASH_RE.sub(SLASH_RE_SUB, value)
+        # Only normalize slashes in font declarations for shorthand
+        if dct['property'] == 'font':
+            value = SLASH_RE.sub(SLASH_RE_SUB, value)
         value = norm_unicode_escapes(value)
         return cls(dct['property'], value)
 

@@ -196,6 +196,15 @@ def test_ignore_comments():
     assert ret == ''
 
 
+def test_urls():
+    ret = main.format_css('a { background: url(//a/b/c); }')
+    assert ret == (
+        'a {\n'
+        '    background: url(//a/b/c);\n'
+        '}\n'
+    )
+
+
 @pytest.mark.usefixtures('in_tmpdir')
 def test_require_nodeenv_not_there(check_call_mock):
     def make_if_not_exists(*_, **__):
