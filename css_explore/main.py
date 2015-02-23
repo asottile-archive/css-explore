@@ -187,8 +187,11 @@ class Rule(collections.namedtuple('Rule', ('selectors', 'properties'))):
     @classmethod
     def from_dict(cls, dct):
         _check_keys(dct, ('selectors', 'declarations'))
-        selectors = ', '.join(sorted(dct['selectors']))
-        selectors = RELATION_RE.sub(RELATION_RE_SUB, selectors)
+        selectors = [
+            RELATION_RE.sub(RELATION_RE_SUB, selector)
+            for selector in dct['selectors']
+        ]
+        selectors = ', '.join(sorted(selectors))
         properties = tuple(
             Property.from_dict(property_dict)
             for property_dict in dct['declarations']

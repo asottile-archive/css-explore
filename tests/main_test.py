@@ -177,6 +177,15 @@ def test_normalize_selector_order():
     )
 
 
+def test_normalize_selector_order_after():
+    ret = main.format_css('a>b, a > b.c { color: red; }')
+    assert ret == (
+        'a > b, a > b.c {\n'
+        '    color: red;\n'
+        '}\n'
+    )
+
+
 def test_comments():
     ret = main.format_css('/*hi*/')
     assert ret == '/*hi*/\n'
