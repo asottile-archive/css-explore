@@ -223,6 +223,15 @@ def test_normalize_multiple_spaces():
     )
 
 
+def test_normalize_colors():
+    ret = main.format_css('a { color: #223344; }')
+    assert ret == (
+        'a {\n'
+        '    color: #234;\n'
+        '}\n'
+    )
+
+
 @pytest.mark.usefixtures('in_tmpdir')
 def test_require_nodeenv_not_there(check_call_mock):
     def make_if_not_exists(*_, **__):
