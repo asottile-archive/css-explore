@@ -150,6 +150,15 @@ def test_normalize_unicode_escapes():
     )
 
 
+def test_normalize_unicode_escapes_more():
+    ret = main.format_css(r'a{content: "\2014 \00A0";}')
+    assert ret == (
+        'a {\n'
+        '    content: "\u2014 \u00A0";\n'
+        '}\n'
+    )
+
+
 def test_normalize_font_shorthand():
     ret = main.format_css('a {font: 12px/1.2 Arial}')
     assert ret == (

@@ -7,7 +7,6 @@ import collections
 import io
 import os.path
 import re
-import string
 import subprocess
 import sys
 
@@ -54,19 +53,14 @@ SPACES_RE = re.compile('[ ]+')
 SPACES_RE_SUB = ' '
 
 
-def norm_unicode_escapes(value):
-    if (
-            len(value) != len(r'"\0000"') or
-            value[0] != value[-1] or
-            value[0] not in ('"', "'") or
-            value[1] != '\\' or
-            not set(value[2:-1]) < set(string.hexdigits)
-    ):
-        return value
+UNICODE_ESC_RE = re.compile(r'\\[A-Fa-f0-9]{4}')
 
-    quote_type = value[0]
-    unescaped = six.unichr(int(value[2:-1], 16))
-    return quote_type + unescaped + quote_type
+
+def norm_unicode_escapes(value):
+    matches = UNICODE_ESC_RE.findall(value)
+    for match in matches:
+        value = value.replace(match, six.unichr(int(match[1:], 16)))
+    return value
 
 
 class Property(collections.namedtuple('Property', ('name', 'value'))):
