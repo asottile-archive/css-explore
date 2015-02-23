@@ -205,6 +205,15 @@ def test_urls():
     )
 
 
+def test_normalize_multiple_spaces():
+    ret = main.format_css('a { background-position: 0    0; }')
+    assert ret == (
+        'a {\n'
+        '    background-position: 0 0;\n'
+        '}\n'
+    )
+
+
 @pytest.mark.usefixtures('in_tmpdir')
 def test_require_nodeenv_not_there(check_call_mock):
     def make_if_not_exists(*_, **__):

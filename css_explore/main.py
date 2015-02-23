@@ -50,6 +50,8 @@ RGBA_RE = re.compile(r'rgba\({0},\s*{0},\s*{0},\s*{0}\)'.format(NUM))
 RGBA_RE_SUB = r'rgba(\1, \2, \3, \4)'
 SLASH_RE = re.compile(r'\s*/\s*')
 SLASH_RE_SUB = ' / '
+SPACES_RE = re.compile('[ ]+')
+SPACES_RE_SUB = ' '
 
 
 def norm_unicode_escapes(value):
@@ -81,6 +83,7 @@ class Property(collections.namedtuple('Property', ('name', 'value'))):
         # Only normalize slashes in font declarations for shorthand
         if dct['property'] == 'font':
             value = SLASH_RE.sub(SLASH_RE_SUB, value)
+        value = SPACES_RE.sub(SPACES_RE_SUB, value)
         value = norm_unicode_escapes(value)
         return cls(dct['property'], value)
 
