@@ -53,13 +53,13 @@ SPACES_RE = re.compile('[ ]+')
 SPACES_RE_SUB = ' '
 
 
-UNICODE_ESC_RE = re.compile(r'\\[A-Fa-f0-9]{4}')
+UNICODE_ESC_RE = re.compile(r'\\[A-Fa-f0-9]{4}\s*')
 
 
 def norm_unicode_escapes(value):
     matches = UNICODE_ESC_RE.findall(value)
     for match in matches:
-        value = value.replace(match, six.unichr(int(match[1:], 16)))
+        value = value.replace(match, six.unichr(int(match[1:].rstrip(), 16)))
     return value
 
 

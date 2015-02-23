@@ -154,7 +154,7 @@ def test_normalize_unicode_escapes_more():
     ret = main.format_css(r'a{content: "\2014 \00A0";}')
     assert ret == (
         'a {\n'
-        '    content: "\u2014 \u00A0";\n'
+        '    content: "\u2014\u00A0";\n'
         '}\n'
     )
 
