@@ -111,7 +111,11 @@ class Comment(collections.namedtuple('Comment', ('comment',))):
         return cls(dct['comment'])
 
     def to_text(self, **kwargs):
-        return '/*{0}*/\n'.format(self.comment)
+        ignore_comments = kwargs['ignore_comments']
+        if ignore_comments:
+            return ''
+        else:
+            return '/*{0}*/\n'.format(self.comment)
 
 
 class KeyFrame(collections.namedtuple('KeyFrame', ('values', 'properties'))):
@@ -238,6 +242,7 @@ def generic_to_node(node_dict):
 
 def format_css(contents, **kwargs):
     ignore_charset = kwargs.pop('ignore_charset', False)
+    ignore_comments = kwargs.pop('ignore_comments', False)
     ignore_empty_rules = kwargs.pop('ignore_empty_rules', False)
     assert not kwargs, kwargs
     require_nodeenv()
@@ -266,6 +271,7 @@ def format_css(contents, **kwargs):
     return ''.join(
         rule.to_text(
             ignore_charset=ignore_charset,
+            ignore_comments=ignore_comments,
             ignore_empty_rules=ignore_empty_rules,
         )
         for rule in rules

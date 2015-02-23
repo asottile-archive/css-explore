@@ -182,6 +182,11 @@ def test_comments():
     assert ret == '/*hi*/\n'
 
 
+def test_ignore_comments():
+    ret = main.format_css('/*hi*/', ignore_comments=True)
+    assert ret == ''
+
+
 @pytest.mark.usefixtures('in_tmpdir')
 def test_require_nodeenv_not_there(check_call_mock):
     def make_if_not_exists(*_, **__):
