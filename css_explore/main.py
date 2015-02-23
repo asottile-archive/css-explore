@@ -102,6 +102,18 @@ class Charset(collections.namedtuple('Charset', ('charset',))):
             return '@charset {0};\n'.format(self.charset)
 
 
+class Comment(collections.namedtuple('Comment', ('comment',))):
+    __slots__ = ()
+
+    @classmethod
+    def from_dict(cls, dct):
+        _check_keys(dct, ('comment',))
+        return cls(dct['comment'])
+
+    def to_text(self, **kwargs):
+        return '/*{0}*/\n'.format(self.comment)
+
+
 class KeyFrame(collections.namedtuple('KeyFrame', ('values', 'properties'))):
     __slots__ = ()
 
@@ -213,6 +225,7 @@ def require_nodeenv():
 
 TO_NODE_TYPES = {
     'charset': Charset,
+    'comment': Comment,
     'keyframes': KeyFrames,
     'media': MediaQuery,
     'rule': Rule,
