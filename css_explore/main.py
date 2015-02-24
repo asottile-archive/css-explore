@@ -122,6 +122,25 @@ class Comment(collections.namedtuple('Comment', ('comment',))):
             return '/*{0}*/\n'.format(self.comment)
 
 
+class Document(
+        collections.namedtuple('Document', ('vendor', 'name', 'rules')),
+):
+    __slots__ = ()
+
+    @classmethod
+    def from_dict(cls, dct):
+        _check_keys(dct, ('vendor', 'document', 'rules'))
+        rules = tuple(generic_to_node(node_dict) for node_dict in dct['rules'])
+        return cls(dct.get('vendor', ''), dct['document'], rules)
+
+    def to_text(self, **kwargs):
+        return '@{0}document {1} {{\n{2}}}\n'.format(
+            self.vendor,
+            self.name,
+            indent(''.join(rule.to_text(**kwargs) for rule in self.rules)),
+        )
+
+
 class KeyFrame(collections.namedtuple('KeyFrame', ('values', 'properties'))):
     __slots__ = ()
 
@@ -237,6 +256,7 @@ def require_nodeenv():
 TO_NODE_TYPES = {
     'charset': Charset,
     'comment': Comment,
+    'document': Document,
     'keyframes': KeyFrames,
     'media': MediaQuery,
     'rule': Rule,

@@ -232,6 +232,19 @@ def test_normalize_colors():
     )
 
 
+def test_document():
+    ret = main.format_css(
+        '@-moz-document url-prefix() { a { color: red; } }'
+    )
+    assert ret == (
+        '@-moz-document url-prefix() {\n'
+        '    a {\n'
+        '        color: red;\n'
+        '    }\n'
+        '}\n'
+    )
+
+
 @pytest.mark.usefixtures('in_tmpdir')
 def test_require_nodeenv_not_there(check_call_mock):
     def make_if_not_exists(*_, **__):
