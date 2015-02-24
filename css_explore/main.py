@@ -141,6 +141,18 @@ class Document(
         )
 
 
+class Import(collections.namedtuple('Import', ('value',))):
+    __slots__ = ()
+
+    @classmethod
+    def from_dict(cls, dct):
+        _check_keys(dct, ('import',))
+        return cls(dct['import'])
+
+    def to_text(self, **_):
+        return '@import {0};\n'.format(self.value)
+
+
 class KeyFrame(collections.namedtuple('KeyFrame', ('values', 'properties'))):
     __slots__ = ()
 
@@ -257,6 +269,7 @@ TO_NODE_TYPES = {
     'charset': Charset,
     'comment': Comment,
     'document': Document,
+    'import': Import,
     'keyframes': KeyFrames,
     'media': MediaQuery,
     'rule': Rule,

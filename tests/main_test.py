@@ -245,6 +245,11 @@ def test_document():
     )
 
 
+def test_import():
+    ret = main.format_css('@import url(//foo);')
+    assert ret == '@import url(//foo);\n'
+
+
 @pytest.mark.usefixtures('in_tmpdir')
 def test_require_nodeenv_not_there(check_call_mock):
     def make_if_not_exists(*_, **__):
