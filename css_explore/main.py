@@ -47,6 +47,8 @@ COMMA_RE = re.compile(r'(,\s*)')
 COMMA_RE_SUB = ', '
 FLOAT_RE = re.compile(r'(?<!\d)(\.\d+)')
 FLOAT_RE_SUB = r'0\1'
+POINT_ZERO_RE = re.compile(r'(\d)\.0+px')
+POINT_ZERO_SUB = r'\1px'
 RELATION_RE = re.compile(r'\s*([+>])\s*')
 RELATION_RE_SUB = r' \1 '
 RGBA_RE = re.compile(r'rgba\({0},\s*{0},\s*{0},\s*{0}\)'.format(NUM))
@@ -78,6 +80,7 @@ class Property(collections.namedtuple('Property', ('name', 'value'))):
         value = COLOR_RE.sub(COLOR_RE_SUB, value)
         value = COMMA_RE.sub(COMMA_RE_SUB, value)
         value = FLOAT_RE.sub(FLOAT_RE_SUB, value)
+        value = POINT_ZERO_RE.sub(POINT_ZERO_SUB, value)
         value = RGBA_RE.sub(RGBA_RE_SUB, value)
         # Only normalize slashes in font declarations for shorthand
         if dct['property'] == 'font':

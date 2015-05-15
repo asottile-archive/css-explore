@@ -232,6 +232,15 @@ def test_normalize_colors():
     )
 
 
+def test_normalize_pixels():
+    ret = main.format_css('a { width: 3.0px; }')
+    assert ret == (
+        'a {\n'
+        '    width: 3px;\n'
+        '}\n'
+    )
+
+
 def test_document():
     ret = main.format_css(
         '@-moz-document url-prefix() { a { color: red; } }'
