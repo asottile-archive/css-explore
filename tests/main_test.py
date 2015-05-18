@@ -38,10 +38,10 @@ def test_format_css_simple():
 
 
 def test_unicodez_format_css():
-    ret = main.format_css('body { content: "☃"; }')
+    ret = main.format_css("body { content: '☃'; }")
     assert ret == (
         'body {\n'
-        '    content: "☃";\n'
+        "    content: '☃';\n"
         '}\n'
     )
 
@@ -142,19 +142,19 @@ def test_normalize_comma_media_query():
 
 
 def test_normalize_unicode_escapes():
-    ret = main.format_css(r'a{content: "\25AA"}')
+    ret = main.format_css(r"a{content: '\25AA'}")
     assert ret == (
         'a {\n'
-        '    content: "▪";\n'
+        "    content: '▪';\n"
         '}\n'
     )
 
 
 def test_normalize_unicode_escapes_more():
-    ret = main.format_css(r'a{content: "\2014 \00A0";}')
+    ret = main.format_css(r"a{content: '\2014 \00A0';}")
     assert ret == (
         'a {\n'
-        '    content: "\u2014\u00A0";\n'
+        "    content: '\u2014\u00A0';\n"
         '}\n'
     )
 
@@ -237,6 +237,25 @@ def test_normalize_pixels():
     assert ret == (
         'a {\n'
         '    width: 3px;\n'
+        '}\n'
+    )
+
+
+def test_normalize_quotes():
+    ret = main.format_css('a { content: "foo"; }')
+    assert ret == (
+        'a {\n'
+        "    content: 'foo';\n"
+        '}\n'
+    )
+
+
+def test_normalize_quotes_ignores_strings_containing_quotes():
+    # These are hard, let's leave them alone for now
+    ret = main.format_css('a { content: "\'"; }')
+    assert ret == (
+        'a {\n'
+        '    content: "\'";\n'
         '}\n'
     )
 
