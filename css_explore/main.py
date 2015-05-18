@@ -41,6 +41,12 @@ def indent(text):
 NUM = r'(\d*(?:\.\d*)?)'
 HEXDIGIT = '[0-9a-fA-F]'
 
+COLORS_TO_SHORT_COLORS = (
+    ('black', '#000'),
+    ('white', '#fff'),
+)
+COLOR_TO_SHORT_RE_PATTERN = r'\b{0}\b'
+
 COLOR_RE = re.compile(r'#({0})\1({0})\2({0})\3'.format(HEXDIGIT))
 COLOR_RE_SUB = r'#\1\2\3'
 COMMA_RE = re.compile(r'(,\s*)')
@@ -85,6 +91,12 @@ class Property(collections.namedtuple('Property', ('name', 'value'))):
         value = POINT_ZERO_RE.sub(POINT_ZERO_SUB, value)
         value = QUOTE_RE.sub(QUOTE_RE_SUB, value)
         value = RGBA_RE.sub(RGBA_RE_SUB, value)
+        for color, replace in COLORS_TO_SHORT_COLORS:
+            value = re.sub(
+                COLOR_TO_SHORT_RE_PATTERN.format(color),
+                replace,
+                value,
+            )
         # Only normalize slashes in font declarations for shorthand
         if dct['property'] == 'font':
             value = SLASH_RE.sub(SLASH_RE_SUB, value)

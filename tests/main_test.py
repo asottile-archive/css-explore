@@ -99,11 +99,11 @@ def test_normalize_color():
 
 def test_normalize_comma():
     ret = main.format_css(
-        'a{box-shadow: 0 1px 1px white,inset 0 4px 4px black;}'
+        'a{box-shadow: 0 1px 1px #fff,inset 0 4px 4px #000;}'
     )
     assert ret == (
         'a {\n'
-        '    box-shadow: 0 1px 1px white, inset 0 4px 4px black;\n'
+        '    box-shadow: 0 1px 1px #fff, inset 0 4px 4px #000;\n'
         '}\n'
     )
 
@@ -256,6 +256,16 @@ def test_normalize_quotes_ignores_strings_containing_quotes():
     assert ret == (
         'a {\n'
         '    content: "\'";\n'
+        '}\n'
+    )
+
+
+def test_normalize_black():
+    # Why black is special, shrugs
+    ret = main.format_css('a { border-top: 1px solid black; }')
+    assert ret == (
+        'a {\n'
+        '    border-top: 1px solid #000;\n'
         '}\n'
     )
 
