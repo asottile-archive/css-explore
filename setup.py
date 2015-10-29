@@ -5,7 +5,7 @@ setup(
     name='css_explore',
     description='Visualizations of a css parse tree',
     url='https://github.com/asottile/css-explore',
-    version='0.0.4',
+    version='0.0.5',
     author='Anthony Sottile',
     author_email='asottile@umich.edu',
     classifiers=[
