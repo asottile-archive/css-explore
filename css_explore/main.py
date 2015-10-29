@@ -263,6 +263,24 @@ class Rule(collections.namedtuple('Rule', ('selectors', 'properties'))):
         )
 
 
+class Supports(
+        collections.namedtuple('Supports', ('supports', 'rules')),
+):
+    __slots__ = ()
+
+    @classmethod
+    def from_dict(cls, dct):
+        _check_keys(dct, ('supports', 'rules'))
+        rules = tuple(generic_to_node(node_dict) for node_dict in dct['rules'])
+        return cls(dct['supports'], rules)
+
+    def to_text(self, **kwargs):
+        return '@supports {0} {{\n{1}}}\n'.format(
+            self.supports,
+            indent(''.join(rule.to_text(**kwargs) for rule in self.rules)),
+        )
+
+
 def require_nodeenv():
     # Make it in the current directory, whatevs.
     if os.path.exists(os.path.join(NENV_PATH, 'installed')):
@@ -291,6 +309,7 @@ TO_NODE_TYPES = {
     'keyframes': KeyFrames,
     'media': MediaQuery,
     'rule': Rule,
+    'supports': Supports,
 }
 
 

@@ -283,6 +283,19 @@ def test_document():
     )
 
 
+def test_supports():
+    ret = main.format_css(
+        '@supports (-moz-appearance:meterbar) { a { color: red; } }',
+    )
+    assert ret == (
+        '@supports (-moz-appearance:meterbar) {\n'
+        '    a {\n'
+        '        color: red;\n'
+        '    }\n'
+        '}\n'
+    )
+
+
 def test_import():
     ret = main.format_css('@import url(//foo);')
     assert ret == '@import url(//foo);\n'
