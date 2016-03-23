@@ -5,13 +5,13 @@ from __future__ import unicode_literals
 import argparse
 import collections
 import io
+import json
 import os.path
 import re
 import subprocess
 import sys
 
 import pkg_resources
-import simplejson
 import six
 
 
@@ -21,9 +21,9 @@ NENV_PATH = '.nenv-css-explore'
 class CalledProcessError(ValueError):
     def __init__(self, returncode, out, err):
         super(CalledProcessError, self).__init__(
-            'Unexpected returncode ({0})\n'
-            'stdout:\n{1}\n'
-            'stderr:\n{2}\n'.format(returncode, out, err),
+            'Unexpected returncode ({})\n'
+            'stdout:\n{}\n'
+            'stderr:\n{}\n'.format(returncode, out, err),
         )
 
 
@@ -45,7 +45,7 @@ COLORS_TO_SHORT_COLORS = (
     ('black', '#000'),
     ('white', '#fff'),
 )
-COLOR_TO_SHORT_RE_PATTERN = r'\b{0}\b'
+COLOR_TO_SHORT_RE_PATTERN = r'\b{}\b'
 
 COLOR_RE = re.compile(r'#({0})\1({0})\2({0})\3'.format(HEXDIGIT))
 COLOR_RE_SUB = r'#\1\2\3'
@@ -105,7 +105,7 @@ class Property(collections.namedtuple('Property', ('name', 'value'))):
         return cls(dct['property'], value)
 
     def to_text(self, **_):
-        return '    {0}: {1};\n'.format(self.name, self.value)
+        return '    {}: {};\n'.format(self.name, self.value)
 
 
 class Charset(collections.namedtuple('Charset', ('charset',))):
@@ -121,7 +121,7 @@ class Charset(collections.namedtuple('Charset', ('charset',))):
         if ignore_charset:
             return ''
         else:
-            return '@charset {0};\n'.format(self.charset)
+            return '@charset {};\n'.format(self.charset)
 
 
 class Comment(collections.namedtuple('Comment', ('comment',))):
@@ -137,7 +137,7 @@ class Comment(collections.namedtuple('Comment', ('comment',))):
         if ignore_comments:
             return ''
         else:
-            return '/*{0}*/\n'.format(self.comment)
+            return '/*{}*/\n'.format(self.comment)
 
 
 class Document(
@@ -152,7 +152,7 @@ class Document(
         return cls(dct.get('vendor', ''), dct['document'], rules)
 
     def to_text(self, **kwargs):
-        return '@{0}document {1} {{\n{2}}}\n'.format(
+        return '@{}document {} {{\n{}}}\n'.format(
             self.vendor,
             self.name,
             indent(''.join(rule.to_text(**kwargs) for rule in self.rules)),
@@ -168,7 +168,7 @@ class Import(collections.namedtuple('Import', ('value',))):
         return cls(dct['import'])
 
     def to_text(self, **_):
-        return '@import {0};\n'.format(self.value)
+        return '@import {};\n'.format(self.value)
 
 
 class KeyFrame(collections.namedtuple('KeyFrame', ('values', 'properties'))):
@@ -184,7 +184,7 @@ class KeyFrame(collections.namedtuple('KeyFrame', ('values', 'properties'))):
         return cls(', '.join(dct['values']), properties)
 
     def to_text(self, **kwargs):
-        return '{0} {{\n{1}}}\n'.format(
+        return '{} {{\n{}}}\n'.format(
             self.values,
             ''.join(
                 property.to_text(**kwargs) for property in self.properties
@@ -207,7 +207,7 @@ class KeyFrames(
         return cls(dct.get('vendor', ''), dct['name'], keyframes)
 
     def to_text(self, **kwargs):
-        return '@{0}keyframes {1} {{\n{2}}}\n'.format(
+        return '@{}keyframes {} {{\n{}}}\n'.format(
             self.vendor,
             self.name,
             indent(''.join(
@@ -228,7 +228,7 @@ class MediaQuery(collections.namedtuple('MediaQuery', ('media', 'rules'))):
         return cls(media, rules)
 
     def to_text(self, **kwargs):
-        return '@media {0} {{\n{1}}}\n'.format(
+        return '@media {} {{\n{}}}\n'.format(
             self.media,
             indent(''.join(rule.to_text(**kwargs) for rule in self.rules)),
         )
@@ -255,7 +255,7 @@ class Rule(collections.namedtuple('Rule', ('selectors', 'properties'))):
         ignore_empty_rules = kwargs['ignore_empty_rules']
         if ignore_empty_rules and not self.properties:
             return ''
-        return '{0} {{\n{1}}}\n'.format(
+        return '{} {{\n{}}}\n'.format(
             self.selectors,
             ''.join(
                 property.to_text(**kwargs) for property in self.properties
@@ -275,7 +275,7 @@ class Supports(
         return cls(dct['supports'], rules)
 
     def to_text(self, **kwargs):
-        return '@supports {0} {{\n{1}}}\n'.format(
+        return '@supports {} {{\n{}}}\n'.format(
             self.supports,
             indent(''.join(rule.to_text(**kwargs) for rule in self.rules)),
         )
@@ -292,13 +292,13 @@ def require_nodeenv():
         stderr=open(os.devnull, 'w'),
     )
     subprocess.check_call(
-        ('{0}/bin/npm'.format(NENV_PATH), 'install', '-g', 'css'),
+        ('{}/bin/npm'.format(NENV_PATH), 'install', '-g', 'css'),
         stdout=open(os.devnull, 'w'),
         stderr=open(os.devnull, 'w'),
     )
 
     # Atomically indicate we've installed
-    io.open('{0}/installed'.format(NENV_PATH), 'w').close()
+    io.open('{}/installed'.format(NENV_PATH), 'w').close()
 
 
 TO_NODE_TYPES = {
@@ -327,7 +327,7 @@ def format_css(contents, **kwargs):
     proc = subprocess.Popen(
         (
             'sh', '-c',
-            ". {0}/bin/activate && node '{1}'".format(
+            ". {}/bin/activate && node '{}'".format(
                 NENV_PATH,
                 pkg_resources.resource_filename(  # pylint:disable=no-member
                     'css_explore', 'resources/css_to_json.js',
@@ -343,7 +343,7 @@ def format_css(contents, **kwargs):
     if proc.returncode:
         raise CalledProcessError(proc.returncode, out, err)
 
-    sheet = simplejson.loads(out)['stylesheet']
+    sheet = json.loads(out)['stylesheet']
     rules = tuple(generic_to_node(rule_dict) for rule_dict in sheet['rules'])
     return ''.join(
         rule.to_text(
