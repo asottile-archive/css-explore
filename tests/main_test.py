@@ -2,6 +2,7 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
+import hashlib
 import io
 import os
 
@@ -299,6 +300,20 @@ def test_supports():
 def test_import():
     ret = main.format_css('@import url(//foo);')
     assert ret == '@import url(//foo);\n'
+
+
+def test_buffer_bug():
+    """A bug existed in the js code which was only triggered due to buffering
+    issues.  This requires a large css file rich with unicode characters.
+    """
+    def md5(s):
+        return hashlib.md5(s.encode('UTF-8')).hexdigest()
+
+    css = 'a{b:' + 'Ｐゴシック' * 50000 + '}'
+    orig = md5(main.format_css(css))
+
+    for _ in range(5):
+        assert md5(main.format_css(css)) == orig
 
 
 @pytest.mark.usefixtures('in_tmpdir')

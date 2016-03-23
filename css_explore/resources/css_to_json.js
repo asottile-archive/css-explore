@@ -10,5 +10,5 @@ process.stdin.on('readable', function () {
 });
 
 process.stdin.on('end', function () {
-    console.log(JSON.stringify(css.parse(chunks.join(''), {silent: false})));
+    console.log(JSON.stringify(css.parse(Buffer.concat(chunks).toString('UTF-8'), {silent: false})));
 });
