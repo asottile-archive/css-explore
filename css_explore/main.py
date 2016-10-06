@@ -292,7 +292,10 @@ def require_nodeenv():
         stderr=open(os.devnull, 'w'),
     )
     subprocess.check_call(
-        ('{}/bin/npm'.format(NENV_PATH), 'install', '-g', 'css'),
+        (
+            'bash', '-c',
+            '. {}/bin/activate && npm install -g css'.format(NENV_PATH),
+        ),
         stdout=open(os.devnull, 'w'),
         stderr=open(os.devnull, 'w'),
     )
