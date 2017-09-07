@@ -13,24 +13,13 @@ setup(
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: Implementation :: CPython',
         'Programming Language :: Python :: Implementation :: PyPy',
     ],
-    packages=find_packages('.', exclude=('tests*', 'testing*')),
-    package_data={
-        'css_explore': [
-            'resources/css_to_json.js',
-        ],
-    },
-    install_requires=[
-        'nodeenv',
-        'six',
-    ],
-    entry_points={
-        'console_scripts': [
-            'css-format = css_explore.main:main',
-        ],
-    },
+    packages=find_packages(exclude=('tests*', 'testing*')),
+    package_data={'css_explore': ['resources/css_to_json.js']},
+    install_requires=['nodeenv', 'six'],
+    entry_points={'console_scripts': ['css-format = css_explore.main:main']},
 )
