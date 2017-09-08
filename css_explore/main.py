@@ -332,7 +332,7 @@ def format_css(contents, **kwargs):
             'sh', '-c',
             ". {}/bin/activate && node '{}'".format(
                 NENV_PATH,
-                pkg_resources.resource_filename(  # pylint:disable=no-member
+                pkg_resources.resource_filename(
                     'css_explore', 'resources/css_to_json.js',
                 ),
             )
