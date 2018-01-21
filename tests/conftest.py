@@ -8,7 +8,7 @@ import mock
 import pytest
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def in_tmpdir(tmpdir):
     pwd = os.getcwd()
     os.chdir(tmpdir.strpath)
@@ -18,7 +18,7 @@ def in_tmpdir(tmpdir):
         os.chdir(pwd)
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def check_call_mock():
     with mock.patch.object(subprocess, 'check_call') as mocked:
         yield mocked
