@@ -1,8 +1,8 @@
-[![Build Status](https://travis-ci.org/asottile/css-explore.svg?branch=master)](https://travis-ci.org/asottile/css-explore)
-[![Coverage Status](https://img.shields.io/coveralls/asottile/css-explore.svg?branch=master)](https://coveralls.io/r/asottile/css-explore)
+[![Build Status](https://dev.azure.com/asottile/asottile/_apis/build/status/asottile.css-explore?branchName=master)](https://dev.azure.com/asottile/asottile/_build/latest?definitionId=42&branchName=master)
+[![Azure DevOps coverage](https://img.shields.io/azure-devops/coverage/asottile/asottile/42/master.svg)](https://dev.azure.com/asottile/asottile/_build/latest?definitionId=42&branchName=master)
 
 css-explore
-==========
+===========
 
 This originally started as a tool to visualize the parse tree of a css
 document, but more or less turned into a pretty printer.
@@ -18,7 +18,7 @@ This uses:
 
 ## Usage
 
-```
+```console
 $ css-format --help
 usage: css-format [-h] filename
 
@@ -31,7 +31,7 @@ optional arguments:
 
 Example run:
 
-```
+```console
 $ echo 'body{color:red}' > test.css
 $ css-format test.css
 body {
