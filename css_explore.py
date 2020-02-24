@@ -90,12 +90,9 @@ def norm_unicode_escapes(value: str) -> str:
 
 
 class Settings(NamedTuple):
-    ignore_charset: bool
-    ignore_comments: bool
-    ignore_empty_rules: bool
-
-
-Settings.__new__.__defaults__ = (False, False, False)
+    ignore_charset: bool = False
+    ignore_comments: bool = False
+    ignore_empty_rules: bool = False
 
 
 class CSSNode(Protocol):
@@ -108,86 +105,62 @@ class Property(NamedTuple):
     name: str
     value: str
 
+    @classmethod
+    def from_dict(cls, dct: Dict[str, Any]) -> 'Property':
+        assert dct['type'] == 'declaration', dct['type']
+        _check_keys(dct, ('property', 'value'))
+        value = dct['value']
+        value = COLOR_RE.sub(COLOR_RE_SUB, value)
+        value = COMMA_RE.sub(COMMA_RE_SUB, value)
+        value = FLOAT_RE.sub(FLOAT_RE_SUB, value)
+        value = POINT_ZERO_RE.sub(POINT_ZERO_SUB, value)
+        value = QUOTE_RE.sub(QUOTE_RE_SUB, value)
+        value = RGBA_RE.sub(RGBA_RE_SUB, value)
+        for color, replace in COLORS_TO_SHORT_COLORS:
+            value = re.sub(
+                COLOR_TO_SHORT_RE_PATTERN.format(color),
+                replace,
+                value,
+            )
+        # Only normalize slashes in font declarations for shorthand
+        if dct['property'] == 'font':
+            value = SLASH_RE.sub(SLASH_RE_SUB, value)
+        value = SPACES_RE.sub(SPACES_RE_SUB, value)
+        value = norm_unicode_escapes(value)
+        return cls(dct['property'], value)
 
-@classmethod
-def from_dict(cls, dct: Dict[str, Any]) -> 'Property':
-    assert dct['type'] == 'declaration', dct['type']
-    _check_keys(dct, ('property', 'value'))
-    value = dct['value']
-    value = COLOR_RE.sub(COLOR_RE_SUB, value)
-    value = COMMA_RE.sub(COMMA_RE_SUB, value)
-    value = FLOAT_RE.sub(FLOAT_RE_SUB, value)
-    value = POINT_ZERO_RE.sub(POINT_ZERO_SUB, value)
-    value = QUOTE_RE.sub(QUOTE_RE_SUB, value)
-    value = RGBA_RE.sub(RGBA_RE_SUB, value)
-    for color, replace in COLORS_TO_SHORT_COLORS:
-        value = re.sub(
-            COLOR_TO_SHORT_RE_PATTERN.format(color),
-            replace,
-            value,
-        )
-    # Only normalize slashes in font declarations for shorthand
-    if dct['property'] == 'font':
-        value = SLASH_RE.sub(SLASH_RE_SUB, value)
-    value = SPACES_RE.sub(SPACES_RE_SUB, value)
-    value = norm_unicode_escapes(value)
-    return cls(dct['property'], value)
-
-
-Property.from_dict = from_dict
-
-
-def to_text(self, settings: Settings) -> str:
-    return f'    {self.name}: {self.value};\n'
-
-
-Property.to_text = to_text
+    def to_text(self, settings: Settings) -> str:
+        return f'    {self.name}: {self.value};\n'
 
 
 class Charset(NamedTuple):
     charset: str
 
+    @classmethod
+    def from_dict(cls, dct: Dict[str, Any]) -> 'Charset':
+        _check_keys(dct, ('charset',))
+        return cls(dct['charset'])
 
-@classmethod
-def from_dict(cls, dct: Dict[str, Any]) -> 'Charset':
-    _check_keys(dct, ('charset',))
-    return cls(dct['charset'])
-
-
-Charset.from_dict = from_dict
-
-
-def to_text(self, settings: Settings) -> str:
-    if settings.ignore_charset:
-        return ''
-    else:
-        return f'@charset {self.charset};\n'
-
-
-Charset.to_text = to_text
+    def to_text(self, settings: Settings) -> str:
+        if settings.ignore_charset:
+            return ''
+        else:
+            return f'@charset {self.charset};\n'
 
 
 class Comment(NamedTuple):
     comment: str
 
+    @classmethod
+    def from_dict(cls, dct: Dict[str, Any]) -> 'Comment':
+        _check_keys(dct, ('comment',))
+        return cls(dct['comment'])
 
-@classmethod
-def from_dict(cls, dct: Dict[str, Any]) -> 'Comment':
-    _check_keys(dct, ('comment',))
-    return cls(dct['comment'])
-
-
-Comment.from_dict = from_dict
-
-
-def to_text(self, settings: Settings) -> str:
-    if settings.ignore_comments:
-        return ''
-    else:
-        return f'/*{self.comment}*/\n'
-
-
-Comment.to_text = to_text
+    def to_text(self, settings: Settings) -> str:
+        if settings.ignore_comments:
+            return ''
+        else:
+            return f'/*{self.comment}*/\n'
 
 
 class Document(NamedTuple):
@@ -195,74 +168,50 @@ class Document(NamedTuple):
     name: str
     rules: Tuple[CSSNode, ...]
 
+    @classmethod
+    def from_dict(cls, dct: Dict[str, Any]) -> 'Document':
+        _check_keys(dct, ('vendor', 'document', 'rules'))
+        rules = tuple(generic_to_node(node_dict) for node_dict in dct['rules'])
+        return cls(dct.get('vendor', ''), dct['document'], rules)
 
-@classmethod
-def from_dict(cls, dct: Dict[str, Any]) -> 'Document':
-    _check_keys(dct, ('vendor', 'document', 'rules'))
-    rules = tuple(generic_to_node(node_dict) for node_dict in dct['rules'])
-    return cls(dct.get('vendor', ''), dct['document'], rules)
-
-
-Document.from_dict = from_dict
-
-
-def to_text(self, settings: Settings) -> str:
-    return '@{}document {} {{\n{}}}\n'.format(
-        self.vendor,
-        self.name,
-        indent(''.join(rule.to_text(settings) for rule in self.rules)),
-    )
-
-
-Document.to_text = to_text
+    def to_text(self, settings: Settings) -> str:
+        return '@{}document {} {{\n{}}}\n'.format(
+            self.vendor,
+            self.name,
+            indent(''.join(rule.to_text(settings) for rule in self.rules)),
+        )
 
 
 class Import(NamedTuple):
     value: str
 
+    @classmethod
+    def from_dict(cls, dct: Dict[str, Any]) -> 'Import':
+        _check_keys(dct, ('import',))
+        return cls(dct['import'])
 
-@classmethod
-def from_dict(cls, dct: Dict[str, Any]) -> 'Import':
-    _check_keys(dct, ('import',))
-    return cls(dct['import'])
-
-
-Import.from_dict = from_dict
-
-
-def to_text(self, settings: Settings) -> str:
-    return f'@import {self.value};\n'
-
-
-Import.to_text = to_text
+    def to_text(self, settings: Settings) -> str:
+        return f'@import {self.value};\n'
 
 
 class KeyFrame(NamedTuple):
     values: str
     properties: Tuple[Property, ...]
 
+    @classmethod
+    def from_dict(cls, dct: Dict[str, Any]) -> 'KeyFrame':
+        _check_keys(dct, ('declarations', 'values'))
+        properties = tuple(
+            Property.from_dict(property_dict)
+            for property_dict in dct['declarations']
+        )
+        return cls(', '.join(dct['values']), properties)
 
-@classmethod
-def from_dict(cls, dct: Dict[str, Any]) -> 'KeyFrame':
-    _check_keys(dct, ('declarations', 'values'))
-    properties = tuple(
-        Property.from_dict(property_dict)
-        for property_dict in dct['declarations']
-    )
-    return cls(', '.join(dct['values']), properties)
-
-
-KeyFrame.from_dict = from_dict
-
-
-def to_text(self, settings: Settings) -> str:
-    return '{} {{\n{}}}\n'.format(
-        self.values,
-        ''.join(prop.to_text(settings) for prop in self.properties),
-    )
-
-
-KeyFrame.to_text = to_text
+    def to_text(self, settings: Settings) -> str:
+        return '{} {{\n{}}}\n'.format(
+            self.values,
+            ''.join(prop.to_text(settings) for prop in self.properties),
+        )
 
 
 class KeyFrames(NamedTuple):
@@ -270,119 +219,87 @@ class KeyFrames(NamedTuple):
     name: str
     keyframes: Tuple[KeyFrame, ...]
 
+    @classmethod
+    def from_dict(cls, dct: Dict[str, Any]) -> 'KeyFrames':
+        _check_keys(dct, ('vendor', 'name', 'keyframes'))
+        keyframes = tuple(
+            KeyFrame.from_dict(keyframe_dict)
+            for keyframe_dict in dct['keyframes']
+        )
+        return cls(dct.get('vendor', ''), dct['name'], keyframes)
 
-@classmethod
-def from_dict(cls, dct: Dict[str, Any]) -> 'KeyFrames':
-    _check_keys(dct, ('vendor', 'name', 'keyframes'))
-    keyframes = tuple(
-        KeyFrame.from_dict(keyframe_dict)
-        for keyframe_dict in dct['keyframes']
-    )
-    return cls(dct.get('vendor', ''), dct['name'], keyframes)
-
-
-KeyFrames.from_dict = from_dict
-
-
-def to_text(self, settings: Settings) -> str:
-    return '@{}keyframes {} {{\n{}}}\n'.format(
-        self.vendor,
-        self.name,
-        indent(
-            ''.join(
-                keyframe.to_text(settings) for keyframe in self.keyframes
+    def to_text(self, settings: Settings) -> str:
+        return '@{}keyframes {} {{\n{}}}\n'.format(
+            self.vendor,
+            self.name,
+            indent(
+                ''.join(
+                    keyframe.to_text(settings) for keyframe in self.keyframes
+                ),
             ),
-        ),
-    )
-
-
-KeyFrames.to_text = to_text
+        )
 
 
 class MediaQuery(NamedTuple):
     media: str
     rules: Tuple[CSSNode, ...]
 
+    @classmethod
+    def from_dict(cls, dct: Dict[str, Any]) -> 'MediaQuery':
+        _check_keys(dct, ('media', 'rules'))
+        media = dct['media']
+        media = COMMA_RE.sub(COMMA_RE_SUB, media)
+        rules = tuple(generic_to_node(node_dict) for node_dict in dct['rules'])
+        return cls(media, rules)
 
-@classmethod
-def from_dict(cls, dct: Dict[str, Any]) -> 'MediaQuery':
-    _check_keys(dct, ('media', 'rules'))
-    media = dct['media']
-    media = COMMA_RE.sub(COMMA_RE_SUB, media)
-    rules = tuple(generic_to_node(node_dict) for node_dict in dct['rules'])
-    return cls(media, rules)
-
-
-MediaQuery.from_dict = from_dict
-
-
-def to_text(self, settings: Settings) -> str:
-    return '@media {} {{\n{}}}\n'.format(
-        self.media,
-        indent(''.join(rule.to_text(settings) for rule in self.rules)),
-    )
-
-
-MediaQuery.to_text = to_text
+    def to_text(self, settings: Settings) -> str:
+        return '@media {} {{\n{}}}\n'.format(
+            self.media,
+            indent(''.join(rule.to_text(settings) for rule in self.rules)),
+        )
 
 
 class Rule(NamedTuple):
     selectors: str
     properties: Tuple[Property, ...]
 
+    @classmethod
+    def from_dict(cls, dct: Dict[str, Any]) -> 'Rule':
+        _check_keys(dct, ('selectors', 'declarations'))
+        selectors = [
+            RELATION_RE.sub(RELATION_RE_SUB, selector)
+            for selector in dct['selectors']
+        ]
+        properties = tuple(
+            Property.from_dict(property_dict)
+            for property_dict in dct['declarations']
+        )
+        return cls(', '.join(sorted(selectors)), properties)
 
-@classmethod
-def from_dict(cls, dct: Dict[str, Any]) -> 'Rule':
-    _check_keys(dct, ('selectors', 'declarations'))
-    selectors = [
-        RELATION_RE.sub(RELATION_RE_SUB, selector)
-        for selector in dct['selectors']
-    ]
-    properties = tuple(
-        Property.from_dict(property_dict)
-        for property_dict in dct['declarations']
-    )
-    return cls(', '.join(sorted(selectors)), properties)
-
-
-Rule.from_dict = from_dict
-
-
-def to_text(self, settings: Settings) -> str:
-    if settings.ignore_empty_rules and not self.properties:
-        return ''
-    return '{} {{\n{}}}\n'.format(
-        self.selectors,
-        ''.join(prop.to_text(settings) for prop in self.properties),
-    )
-
-
-Rule.to_text = to_text
+    def to_text(self, settings: Settings) -> str:
+        if settings.ignore_empty_rules and not self.properties:
+            return ''
+        return '{} {{\n{}}}\n'.format(
+            self.selectors,
+            ''.join(prop.to_text(settings) for prop in self.properties),
+        )
 
 
 class Supports(NamedTuple):
     supports: str
     rules: Tuple[CSSNode, ...]
 
+    @classmethod
+    def from_dict(cls, dct: Dict[str, Any]) -> 'Supports':
+        _check_keys(dct, ('supports', 'rules'))
+        rules = tuple(generic_to_node(node_dict) for node_dict in dct['rules'])
+        return cls(dct['supports'], rules)
 
-@classmethod
-def from_dict(cls, dct: Dict[str, Any]) -> 'Supports':
-    _check_keys(dct, ('supports', 'rules'))
-    rules = tuple(generic_to_node(node_dict) for node_dict in dct['rules'])
-    return cls(dct['supports'], rules)
-
-
-Supports.from_dict = from_dict
-
-
-def to_text(self, settings: Settings) -> str:
-    return '@supports {} {{\n{}}}\n'.format(
-        self.supports,
-        indent(''.join(rule.to_text(settings) for rule in self.rules)),
-    )
-
-
-Supports.to_text = to_text
+    def to_text(self, settings: Settings) -> str:
+        return '@supports {} {{\n{}}}\n'.format(
+            self.supports,
+            indent(''.join(rule.to_text(settings) for rule in self.rules)),
+        )
 
 
 def require_nodeenv() -> None:
