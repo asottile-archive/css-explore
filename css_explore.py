@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 import json
 import os.path
@@ -6,12 +8,8 @@ import shlex
 import subprocess
 import sys
 from typing import Any
-from typing import Dict
 from typing import NamedTuple
-from typing import Optional
 from typing import Sequence
-from typing import Tuple
-from typing import Type
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -39,7 +37,7 @@ class CalledProcessError(ValueError):
         )
 
 
-def _check_keys(d: Dict[str, Any], keys: Tuple[str, ...]) -> None:
+def _check_keys(d: dict[str, Any], keys: tuple[str, ...]) -> None:
     # All things have these keys
     keys = keys + ('position', 'type')
     assert set(d) <= set(keys), (set(d), set(keys))
@@ -97,7 +95,7 @@ class Settings(NamedTuple):
 
 class CSSNode(Protocol):
     @classmethod
-    def from_dict(cls, dct: Dict[str, Any]) -> 'CSSNode': ...
+    def from_dict(cls, dct: dict[str, Any]) -> CSSNode: ...
     def to_text(self, settings: Settings) -> str: ...
 
 
@@ -106,7 +104,7 @@ class Property(NamedTuple):
     value: str
 
     @classmethod
-    def from_dict(cls, dct: Dict[str, Any]) -> 'Property':
+    def from_dict(cls, dct: dict[str, Any]) -> Property:
         assert dct['type'] == 'declaration', dct['type']
         _check_keys(dct, ('property', 'value'))
         value = dct['value']
@@ -137,7 +135,7 @@ class Charset(NamedTuple):
     charset: str
 
     @classmethod
-    def from_dict(cls, dct: Dict[str, Any]) -> 'Charset':
+    def from_dict(cls, dct: dict[str, Any]) -> Charset:
         _check_keys(dct, ('charset',))
         return cls(dct['charset'])
 
@@ -152,7 +150,7 @@ class Comment(NamedTuple):
     comment: str
 
     @classmethod
-    def from_dict(cls, dct: Dict[str, Any]) -> 'Comment':
+    def from_dict(cls, dct: dict[str, Any]) -> Comment:
         _check_keys(dct, ('comment',))
         return cls(dct['comment'])
 
@@ -166,10 +164,10 @@ class Comment(NamedTuple):
 class Document(NamedTuple):
     vendor: str
     name: str
-    rules: Tuple[CSSNode, ...]
+    rules: tuple[CSSNode, ...]
 
     @classmethod
-    def from_dict(cls, dct: Dict[str, Any]) -> 'Document':
+    def from_dict(cls, dct: dict[str, Any]) -> Document:
         _check_keys(dct, ('vendor', 'document', 'rules'))
         rules = tuple(generic_to_node(node_dict) for node_dict in dct['rules'])
         return cls(dct.get('vendor', ''), dct['document'], rules)
@@ -186,7 +184,7 @@ class Import(NamedTuple):
     value: str
 
     @classmethod
-    def from_dict(cls, dct: Dict[str, Any]) -> 'Import':
+    def from_dict(cls, dct: dict[str, Any]) -> Import:
         _check_keys(dct, ('import',))
         return cls(dct['import'])
 
@@ -196,10 +194,10 @@ class Import(NamedTuple):
 
 class KeyFrame(NamedTuple):
     values: str
-    properties: Tuple[Property, ...]
+    properties: tuple[Property, ...]
 
     @classmethod
-    def from_dict(cls, dct: Dict[str, Any]) -> 'KeyFrame':
+    def from_dict(cls, dct: dict[str, Any]) -> KeyFrame:
         _check_keys(dct, ('declarations', 'values'))
         properties = tuple(
             Property.from_dict(property_dict)
@@ -217,10 +215,10 @@ class KeyFrame(NamedTuple):
 class KeyFrames(NamedTuple):
     vendor: str
     name: str
-    keyframes: Tuple[KeyFrame, ...]
+    keyframes: tuple[KeyFrame, ...]
 
     @classmethod
-    def from_dict(cls, dct: Dict[str, Any]) -> 'KeyFrames':
+    def from_dict(cls, dct: dict[str, Any]) -> KeyFrames:
         _check_keys(dct, ('vendor', 'name', 'keyframes'))
         keyframes = tuple(
             KeyFrame.from_dict(keyframe_dict)
@@ -242,10 +240,10 @@ class KeyFrames(NamedTuple):
 
 class MediaQuery(NamedTuple):
     media: str
-    rules: Tuple[CSSNode, ...]
+    rules: tuple[CSSNode, ...]
 
     @classmethod
-    def from_dict(cls, dct: Dict[str, Any]) -> 'MediaQuery':
+    def from_dict(cls, dct: dict[str, Any]) -> MediaQuery:
         _check_keys(dct, ('media', 'rules'))
         media = dct['media']
         media = COMMA_RE.sub(COMMA_RE_SUB, media)
@@ -261,10 +259,10 @@ class MediaQuery(NamedTuple):
 
 class Rule(NamedTuple):
     selectors: str
-    properties: Tuple[Property, ...]
+    properties: tuple[Property, ...]
 
     @classmethod
-    def from_dict(cls, dct: Dict[str, Any]) -> 'Rule':
+    def from_dict(cls, dct: dict[str, Any]) -> Rule:
         _check_keys(dct, ('selectors', 'declarations'))
         selectors = [
             RELATION_RE.sub(RELATION_RE_SUB, selector)
@@ -287,10 +285,10 @@ class Rule(NamedTuple):
 
 class Supports(NamedTuple):
     supports: str
-    rules: Tuple[CSSNode, ...]
+    rules: tuple[CSSNode, ...]
 
     @classmethod
-    def from_dict(cls, dct: Dict[str, Any]) -> 'Supports':
+    def from_dict(cls, dct: dict[str, Any]) -> Supports:
         _check_keys(dct, ('supports', 'rules'))
         rules = tuple(generic_to_node(node_dict) for node_dict in dct['rules'])
         return cls(dct['supports'], rules)
@@ -322,7 +320,7 @@ def require_nodeenv() -> None:
     open(f'{NENV_PATH}/installed', 'w').close()
 
 
-TO_NODE_TYPES: Dict[str, Type[CSSNode]] = {
+TO_NODE_TYPES: dict[str, type[CSSNode]] = {
     'charset': Charset,
     'comment': Comment,
     'document': Document,
@@ -334,7 +332,7 @@ TO_NODE_TYPES: Dict[str, Type[CSSNode]] = {
 }
 
 
-def generic_to_node(node_dict: Dict[str, Any]) -> CSSNode:
+def generic_to_node(node_dict: dict[str, Any]) -> CSSNode:
     return TO_NODE_TYPES[node_dict['type']].from_dict(node_dict)
 
 
@@ -372,7 +370,7 @@ def format_css(
     )
 
 
-def main(argv: Optional[Sequence[str]] = None) -> int:
+def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument('filename')
     args = parser.parse_args(argv)
