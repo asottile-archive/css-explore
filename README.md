@@ -1,6 +1,6 @@
-[![Build Status](https://dev.azure.com/asottile/asottile/_apis/build/status/asottile.css-explore?branchName=master)](https://dev.azure.com/asottile/asottile/_build/latest?definitionId=42&branchName=master)
-[![Azure DevOps coverage](https://img.shields.io/azure-devops/coverage/asottile/asottile/42/master.svg)](https://dev.azure.com/asottile/asottile/_build/latest?definitionId=42&branchName=master)
-[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/asottile/css-explore/master.svg)](https://results.pre-commit.ci/latest/github/asottile/css-explore/master)
+[![Build Status](https://dev.azure.com/asottile/asottile/_apis/build/status/asottile.css-explore?branchName=main)](https://dev.azure.com/asottile/asottile/_build/latest?definitionId=42&branchName=main)
+[![Azure DevOps coverage](https://img.shields.io/azure-devops/coverage/asottile/asottile/42/main.svg)](https://dev.azure.com/asottile/asottile/_build/latest?definitionId=42&branchName=main)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/asottile/css-explore/main.svg)](https://results.pre-commit.ci/latest/github/asottile/css-explore/main)
 
 css-explore
 ===========
